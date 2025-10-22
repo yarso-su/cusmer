@@ -1,0 +1,123 @@
+---
+import Link from '../shared/Link.astro'
+---
+
+<section class="pb-8">
+  <div class="flex flex-col lg:gap-4 items-center">
+    <div
+      class="grid grid-cols-1 md:grid-cols-[2fr_1fr] grid-rows-[1fr_auto] lg:grid-rows-1 lg:px-8 lg:gap-8 border-[0px] lg:border-[1px] cborder w-[90%] 2xl:w-[60%]"
+    >
+      <div class="pt-4 md:py-12">
+        <p
+          class="text-lg leading-[1.2] md:text-2xl font-semibold tracking-tight font-geist text-contrast"
+          translate="no"
+          lang="en"
+        >
+          Works
+        </p>
+        <h1
+          class="text-left leading-[1.1] text-3xl lg:text-5xl font-extrabold tracking-tight text-balance"
+        >
+          Servicios de
+          <span
+            class="underline underline-offset-3 decoration-contrast text-black dark:text-white"
+            >software</span
+          > desde Colima
+        </h1>
+        <p class="mt-2 lg:mt-4 text-left text-sm md:text-lg lg:text-xl">
+          Diseño de <a
+            target="_blank"
+            href="/paginas-web/"
+            class="underline decoration-2 underline-offset-2 decoration-blue-500 hover:text-black dark:hover:text-white transition-colors duration-200"
+            >páginas web</a
+          >, desarrollo para escritorio, ios y android, gestión de sistemas,
+          posicionamiento en motores de busqueda y mucho más.
+        </p>
+        <div class="mt-6 lg:mt-8 gap-2 text-base flex flex-col md:flex-row">
+          <div
+            class="grid grid-cols-[auto_1fr] sm:grid-cols-[2fr_3fr] md:grid-cols-1 gap-2"
+          >
+            <Link
+              variant="outline"
+              href="/account/login/"
+              class="px-5 lg:px-12 xl:px-16"
+              aria-label="Ir a la página de inicio de sesión"
+              >Iniciar sesión</Link
+            >
+            <Link
+              variant="outline"
+              href="/english-support/"
+              lang="en"
+              translate="no"
+              class="px-4 md:hidden truncate"
+              aria-label="Go to the English support page"
+              >English Support Status</Link
+            >
+          </div>
+          <Link
+            href="/#contact"
+            class="px-12 xl:px-16"
+            aria-label="Ir al formulario de contacto">Contáctanos</Link
+          >
+        </div>
+      </div>
+      <div
+        class="cborder bg-csecondary flex flex-col justify-center items-center p-5 my-8"
+      >
+        <p class="lg:text-lg mb-1 font-semibold text-left w-full">
+          Oferta express
+        </p>
+        <p
+          class="text-2xl text-left w-full lg:text-3xl font-extrabold lg:font-bold font-geist leading-[1.2] lg:leading-[1.1]"
+        >
+          Obtén
+          <span class="text-contrast"> 10% de descuento</span> en tu primer proyecto
+        </p>
+        <p class="text-sm w-full lg:text-base mt-4 text-left opacity-90">
+          Sujeta a disponibilidad para los siguientes 10 registros.
+        </p>
+      </div>
+    </div>
+    <div
+      class="cborder grid grid-cols-1 lg:grid-cols-4 font-geist w-[90%] 2xl:w-[60%]"
+    >
+      <article
+        class="cborder-b cborder-r lg:border-b-0 border-r-0 lg:border-r-[1px] p-3 lg:p-6"
+      >
+        <p class="font-extrabold lg:font-bold lg:text-xl xl:text-2xl">
+          11 % de crecimiento en ventas
+          <span class="opacity-70 font-semibold">
+            para negocios con
+          </span>e‑commerce
+        </p>
+      </article>
+      <article
+        class="cborder-b cborder-r lg:border-b-0 border-r-0 lg:border-r-[1px] p-3 lg:p-6"
+      >
+        <p class="font-extrabold lg:font-bold lg:text-xl xl:text-2xl">
+          <span class="opacity-70 font-semibold">Las </span>
+          PYMES digitales
+          <span class="opacity-70 font-semibold"> crecen hasta </span>
+          22 % más en facturación
+        </p>
+      </article>
+      <article
+        class="cborder-b cborder-r lg:border-b-0 border-r-0 lg:border-r-[1px] p-3 lg:p-6"
+      >
+        <p class="font-extrabold lg:font-bold lg:text-xl xl:text-2xl">
+          Solo 23% <span class="opacity-70 font-semibold"
+            >de las PYMES mexicanas tienen un
+          </span>sitio web activo
+        </p>
+      </article>
+      <article class="p-3 lg:p-6">
+        <p class="font-extrabold lg:font-bold lg:text-xl xl:text-2xl">
+          9 de cada 10
+          <span class="opacity-70 font-semibold">
+            emprendedores digitales
+          </span>aumentan sus ingresos
+        </p>
+      </article>
+    </div>
+  </div>
+</section>

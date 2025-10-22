@@ -1,0 +1,24 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import OrdersList from '@/components/su/orders/OrdersList.tsx'
+---
+
+<Su>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Servicios', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Servicios
+      </h1>
+    </div>
+    <OrdersList client:load />
+  </div>
+</Su>

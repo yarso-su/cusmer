@@ -1,0 +1,133 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Platform from '@/layouts/Platform.astro'
+import CalendarCheck from '@lucide/astro/icons/calendar-check'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { validateCookies } from '@/lib/server'
+import ItemsList from '@/components/platform/ItemsList'
+import { ORDER_STATUSES } from '@/lib/constants'
+import type { Order } from '@/lib/types'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+let order: null | Omit<Order, 'id'> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/${id}`, {
+    method: 'GET',
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  order = data.order
+} catch (error) {
+  return Astro.redirect('/error', 307)
+}
+
+if (!order) return Astro.redirect('/error', 307)
+const { items, discount } = order
+---
+
+<Platform server>
+  <Breadcrumb
+    items={[
+      { title: 'Plataforma', href: '/platform' },
+      { title: 'Servicios', href: '/platform/services' },
+      { title: id, href: '/' }
+    ]}
+  />
+  <div class="mt-2 flex items-center gap-2">
+    <h1 class="font-semibold tracking-tight">Datos</h1>
+    <span class="cborder-l pl-2">
+      <a
+        href={`/platform/services/${id}/contract`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Contrato</a
+      ></span
+    >
+    <span class="cborder-l pl-2">
+      <a
+        href={`/platform/services/${id}/payments`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Pagos</a
+      ></span
+    >
+    <span class="cborder-l pl-2">
+      <a
+        href={`/platform/services/${id}/threads`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Hilos</a
+      ></span
+    >
+  </div>
+  <section class="mt-2">
+    <div class="flex items-baseline gap-2">
+      <h2
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+        id="order-name"
+      >
+        {order.name}
+      </h2>
+      <span
+        id="subscription-span"
+        class={` opacity-60 ${order.is_recurring ? 'block' : 'hidden'}`}
+        ><CalendarCheck class="size-4" /></span
+      >
+    </div>
+    <div class="bg-csecondary cborder mt-2">
+      <div class="p-2 grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto_auto]">
+        <p class="truncate cborder-b sm:border-b-0 pb-1 sm:pb-0" id="order-tag">
+          {order.tag}
+        </p>
+        <p
+          class="truncate cborder-l cborder-b sm:border-b-0 pl-2 pb-1 sm:pb-0"
+          id="order-status"
+        >
+          {ORDER_STATUSES[order.status]}
+        </p>
+        <p
+          class="truncate cborder-l border-l-0 sm:border-l-[1px] px-2 inline-flex items-center gap-1 pt-1 sm:pt-0"
+        >
+          <span id="order-duration">
+            {order.duration_weeks}
+          </span>
+          <span class="opacity-60">(semanas)</span>
+        </p>
+        <p
+          class="truncate cborder-l px-2 inline-flex items-center gap-1 pt-1 sm:pt-0"
+        >
+          <span id="order-installments">
+            {order.payment_installments}
+          </span>
+          <span class="opacity-60">(cuotas)</span>
+        </p>
+      </div>
+      <p class="p-2 cborder-t leading-7" id="order-description">
+        {order.description}
+      </p>
+    </div>
+  </section>
+  <ItemsList
+    id={id}
+    data={{
+      status: order.status,
+      payment_installments: order.payment_installments,
+      items,
+      discount
+    }}
+    client:load
+  />
+</Platform>

@@ -1,0 +1,48 @@
+---
+import X from '@lucide/astro/icons/x'
+
+interface Props {
+  items: Array<{ title: string; href: string }>
+}
+
+const { items } = Astro.props
+const previous = items[items.length - 2]?.href ??items[0]?.href ?? '/'
+---
+
+<div class="flex items-center justify-between">
+  <span>
+    {
+      items.map((item, index) => {
+        const isLast = index === items.length - 1
+
+        if (isLast) {
+          return <p class="inline-flex text-contrast">{item.title}</p>
+        }
+
+        return (
+          <a
+            href={item.href}
+            class="hover:opacity-80 transition-opaicty duration-200 text-contrast"
+          >
+            {item.title} /
+          </a>
+        )
+      })
+    }
+  </span>
+  {items.length > 1 && (
+<button
+  class="hover:opacity-80 transition-opaicty duration-200"
+  id="return-btn"
+>
+  <X class="size-5" />
+</button>
+<script is:inline define:vars={{ previous }}>
+  function back() {
+    window.location.replace(previous)
+  }
+
+  document.getElementById('return-btn').addEventListener('click', back)
+</script>
+  )}
+</div>

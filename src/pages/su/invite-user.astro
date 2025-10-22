@@ -1,0 +1,24 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import InviteUserForm from '@/components/su/InviteUserForm.tsx'
+---
+
+<Su>
+  <div class="grid grid-rows-[auto_1fr] h-full">
+    <div class="mb-4">
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Invitar', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Invitar usuario
+      </h1>
+    </div>
+    <InviteUserForm client:load />
+  </div>
+</Su>

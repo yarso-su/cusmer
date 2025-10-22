@@ -1,0 +1,139 @@
+---
+import Sun from '@lucide/astro/icons/sun'
+import Moon from '@lucide/astro/icons/moon'
+import Button from './Button.astro'
+---
+
+<Button
+  variant="outline"
+  size="icon"
+  id="theme-toggle"
+  aria-label="Alternar tema"
+>
+  <Sun name="sun-icon" class="size-4 transition-opacity duration-200" />
+  <Moon
+    name="moon-icon"
+    class="size-4 hidden transition-opacity duration-200"
+  />
+</Button>
+
+<script is:inline>
+  ;(() => {
+    const btn = document.getElementById('theme-toggle')
+    const root = document.documentElement
+    const sun = btn.querySelector('svg[name="sun-icon"]')
+    const moon = btn.querySelector('svg[name="moon-icon"]')
+
+    let currentTheme = null
+    let isToggling = false
+
+    const getStored = () => {
+      if (currentTheme === null) {
+        try {
+          currentTheme = localStorage.getItem('theme')
+        } catch (e) {
+          currentTheme = null
+        }
+      }
+      return currentTheme
+    }
+
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    let t = getStored() || (systemDark ? 'dark' : 'light')
+
+    const applyTheme = (immediate = false) => {
+      const isDark = t === 'dark'
+
+      const updateDOM = () => {
+        root.classList.toggle('dark', isDark)
+
+        if (sun && moon) {
+          if (isDark) {
+            sun.classList.add('hidden')
+            moon.classList.remove('hidden')
+          } else {
+            sun.classList.remove('hidden')
+            moon.classList.add('hidden')
+          }
+        }
+
+        requestIdleCallback(() => {
+          try {
+            currentTheme = t
+            localStorage.setItem('theme', t)
+          } catch (e) {
+            console.warn('Could not save theme preference')
+          }
+        })
+      }
+
+      if (immediate) {
+        updateDOM()
+      } else {
+        requestAnimationFrame(updateDOM)
+      }
+    }
+
+    const debounce = (func, wait) => {
+      let timeout
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout)
+          func(...args)
+        }
+        clearTimeout(timeout)
+        timeout = setTimeout(later, wait)
+      }
+    }
+
+    const toggleTheme = () => {
+      if (isToggling) return
+
+      isToggling = true
+
+      btn.style.transform = 'scale(0.95)'
+
+      requestAnimationFrame(() => {
+        t = t === 'light' ? 'dark' : 'light'
+        applyTheme()
+
+        requestAnimationFrame(() => {
+          btn.style.transform = ''
+          isToggling = false
+        })
+      })
+    }
+
+    const debouncedToggle = debounce(toggleTheme, 100)
+
+    btn.addEventListener('click', debouncedToggle, { passive: true })
+
+    applyTheme(true)
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    mediaQuery.addEventListener(
+      'change',
+      e => {
+        if (!getStored()) {
+          t = e.matches ? 'dark' : 'light'
+          applyTheme()
+        }
+      },
+      { passive: true }
+    )
+  })()
+</script>
+
+<style>
+  :root {
+    transition: color-scheme 0.2s ease;
+  }
+
+  #theme-toggle {
+    will-change: transform;
+  }
+
+  #theme-toggle svg {
+    will-change: opacity;
+  }
+</style>

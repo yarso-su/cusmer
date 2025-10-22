@@ -1,0 +1,9 @@
+---
+import { validateCookies } from '@/lib/server'
+
+const valid = validateCookies(Astro.cookies)
+---
+
+<script is:inline define:vars={{ valid }}>
+  if (!valid) window.location.href = '/account/login'
+</script>

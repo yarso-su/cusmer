@@ -1,0 +1,37 @@
+---
+import ContactForm from '@/components/landing/ContactForm'
+---
+
+<footer class="cborder-t bg-csecondary">
+  <div class="mx-auto w-[90%] 2xl:w-[60%]">
+    <section class="py-12 lg:py-24">
+      <div class="mb-6 lg:mb-8">
+        <p
+          id="contact"
+          class="leading-[1.5] text-lg lg:text-2xl font-semibold tracking-tight font-geist text-contrast"
+        >
+          Contáctanos
+        </p>
+        <h2
+          class="leading-[1.1] text-2xl lg:text-3xl font-semibold tracking-tight font-geist"
+        >
+          Hablemos de soluciones para tu negocio
+        </h2>
+        <p class="mt-4 text-xl hidden md:block">
+          Todo comienza con una intención. Si tienes una idea que te gustaría
+          probar, estaremos encantados de ayudarte a desarrollarla. Aunque somos
+          de Colima, nuestro esquema de trabajo es global, por lo que podemos
+          apoyar a cualquier negocio que tenga un proyecto en mente.
+        </p>
+        <p class="mt-2 md:hidden text-sm md:text-lg">
+          Si tienes una idea que te gustaría probar, estaremos encantados de
+          ayudarte a desarrollarla.
+        </p>
+      </div>
+      <ContactForm client:visible />
+    </section>
+    <p class="pb-4 pt-6 lg:pt-12 text-center lg:text-base text-xs opacity-80">
+      © 2025 Works. Todos los derechos reservados.
+    </p>
+  </div>
+</footer>

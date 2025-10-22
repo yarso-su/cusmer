@@ -1,0 +1,121 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { ORDER_STATUSES, THREAD_STATUSES_KEYS } from '@/lib/constants'
+import { validateCookies } from '@/lib/server'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+let orders: null | Array<{
+  id: number
+  name: string
+  tag: string
+  status: number
+}> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/users/${id}/orders`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  orders = data.orders
+} catch (e) {
+  console.error(e)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Usuarios', href: '/su/users' },
+          { title: id.split('-')[0], href: `/su/users/${id}` },
+          { title: 'Servicios', href: '' }
+        ]}
+      />
+      <div class="mt-2 flex items-center gap-2">
+        <span>
+          <a
+            href={`/su/users/${id}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Datos</a
+          ></span
+        >
+        <span class="cborder-l pl-2">
+          <h1 class="font-semibold tracking-tight">Servicios</h1>
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/payments`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Pagos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/threads?status=${THREAD_STATUSES_KEYS.OPEN}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Hilos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/secrets`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Credenciales</a
+          >
+        </span>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        !orders || orders.length === 0 ? (
+          <div class="w-full h-full flex justify-center items-center">
+            <p class="text-center opacity-80 dark:opacity-60">
+              No hay servicios que mostrar
+            </p>
+          </div>
+        ) : (
+          <ul>
+            {orders.map(order => (
+              <li>
+                <a
+                  href={`/su/services/${order.id}`}
+                  class="grid cborder-b grid-cols-[1fr_1fr_auto] p-2 pressable-hover"
+                >
+                  <p class="truncate">{order.name}</p>
+                  <p class="cborder-l pl-2 truncate">{order.tag}</p>
+                  <div class="px-2">
+                    <p class="cborder-l pl-2 ">
+                      {ORDER_STATUSES[order.status]}
+                    </p>
+                  </div>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Su>

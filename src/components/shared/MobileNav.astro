@@ -1,0 +1,126 @@
+---
+import Button from './Button.astro'
+import Menu from '@lucide/astro/icons/menu'
+---
+
+<div class="relative lg:hidden">
+  <Button
+    variant="outline"
+    size="icon"
+    id="menu-toggle"
+    aria-expanded="false"
+    aria-controls="mobile-menu"
+    class="p-2 rounded-md border"
+  >
+    <Menu class="size-4" />
+  </Button>
+
+  <nav
+    id="mobile-menu"
+    class="absolute bottom-0 translate-y-full transform transition-transform duration-200 ease-in-out origin-bottom-right"
+    hidden
+  >
+    <ul
+      class="fixed p-1 bg-csecondary cborder mt-1 flex flex-col gap-1 text-sm"
+    >
+      <li>
+        <a
+          href="/"
+          class="block hover:bg-black/5 dark:hover:bg-white/5 py-1 px-3 transition-colors duration-200 rounded-sm"
+          >Inicio</a
+        >
+      </li>
+      <li>
+        <a
+          href="/paginas-web/"
+          class="block hover:bg-black/5 dark:hover:bg-white/5 py-1 px-3 transition-colors duration-200 rounded-sm whitespace-nowrap"
+          >Páginas web</a
+        >
+      </li>
+      <li>
+        <a
+          href="/english-support/"
+          lang="en"
+          translate="no"
+          class="block hover:bg-black/5 dark:hover:bg-white/5 py-1 px-3 transition-colors duration-200 rounded-sm whitespace-nowrap"
+          >English support</a
+        >
+      </li>
+      <li>
+        <a
+          target="_blank"
+          href="https://es.yarso.dev"
+          class="block hover:bg-black/5 dark:hover:bg-white/5 py-1 px-3 transition-colors duration-200 rounded-sm"
+          >Blog (Externo)</a
+        >
+      </li>
+      <li>
+        <a
+          href="/account/login/"
+          class="block hover:bg-black/5 dark:hover:bg-white/5 py-1 px-3 transition-colors duration-200 rounded-sm whitespace-nowrap"
+          >Iniciar sesión</a
+        >
+      </li>
+    </ul>
+  </nav>
+</div>
+
+<script is:inline>
+  const OPTS = {
+    duration: 150,
+    easing: 'ease-in-out',
+    fill: 'forwards'
+  }
+
+  const toggleBtn = document.getElementById('menu-toggle')
+  const menu = document.getElementById('mobile-menu')
+
+  let lastFocused = null
+
+  function openMenu() {
+    lastFocused = document.activeElement
+    menu.hidden = false
+    menu.classList.remove('hidden')
+    menu.animate([{ opacity: '0' }, { opacity: '1' }], OPTS).onfinish = () => {
+      toggleBtn.setAttribute('aria-expanded', 'true')
+      document.body.style.overflow = 'hidden'
+      menu.querySelector('a')?.focus()
+    }
+
+    const content = menu.getElementsByTagName('ul')[0]
+    if (content) {
+      menu.style.setProperty('right', `${content.offsetWidth}px`)
+    }
+  }
+
+  function closeMenu() {
+    menu.animate([{ opacity: '1' }, { opacity: '0' }], OPTS).onfinish = () => {
+      menu.classList.add('hidden')
+
+      setTimeout(() => {
+        if (menu.classList.contains('hidden')) {
+          menu.hidden = true
+          lastFocused?.focus()
+        }
+      }, 300)
+
+      toggleBtn.setAttribute('aria-expanded', 'false')
+      document.body.style.overflow = ''
+    }
+  }
+
+  toggleBtn.addEventListener('click', () => {
+    const isOpen = toggleBtn.getAttribute('aria-expanded') === 'true'
+    isOpen ? closeMenu() : openMenu()
+  })
+
+  document.addEventListener('click', e => {
+    if (
+      toggleBtn.getAttribute('aria-expanded') === 'true' &&
+      !menu.contains(e.target) &&
+      e.target !== toggleBtn
+    ) {
+      closeMenu()
+    }
+  })
+</script>

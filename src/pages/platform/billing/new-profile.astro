@@ -1,0 +1,58 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import SaveBillingProfileForms from '@/components/platform/SaveBillingProfileForms'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import type { Regime } from '@/lib/types'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+let regimes: Array<Regime> = []
+
+try {
+  const res = await fetch(
+    `${import.meta.env.API_URL}/users/billing/predefined-values`,
+    {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    }
+  )
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  regimes = data.regimes
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Facturación', href: '/platform/billing' },
+          { title: 'Nuevo perfil', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Configura tu perfil de facturación
+      </h1>
+    </div>
+    <SaveBillingProfileForms regimes={regimes} client:load />
+  </div>
+</Platform>

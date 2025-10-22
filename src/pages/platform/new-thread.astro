@@ -1,0 +1,100 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import CreateThreadForm from '@/components/platform/CreateThreadForm'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import { THREAD_TYPES } from '@/lib/constants'
+import type { OrderSummary } from '@/lib/types'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { searchParams } = Astro.url
+const typeParam = searchParams.get('type') ?? undefined
+const orderIdParam = searchParams.get('order_id')
+const orderId = orderIdParam ? Number(orderIdParam) : undefined
+let order: null | { id: number; name: string } = null
+let orders: null | Array<OrderSummary> = null
+
+try {
+  if (!orderId) {
+    const res = await fetch(`${import.meta.env.API_URL}/orders/summary/names`, {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    })
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    const newCookies = res.headers.get('Set-Cookie')
+    if (newCookies) {
+      Astro.response.headers.set('Set-Cookie', newCookies)
+    }
+
+    const data = await res.json()
+    orders = data.names
+  } else {
+    const res = await fetch(
+      `${import.meta.env.API_URL}/orders/${orderId}/name`,
+      {
+        headers: {
+          Cookie: Astro.request.headers.get('cookie') || ''
+        }
+      }
+    )
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    const newCookies = res.headers.get('Set-Cookie')
+    if (newCookies) {
+      Astro.response.headers.set('Set-Cookie', newCookies)
+    }
+
+    const data = await res.json()
+    order = {
+      id: orderId,
+      name: data.name
+    }
+  }
+} catch {
+  return Astro.redirect('/error', 307)
+}
+
+if (!order && !orders) return Astro.redirect('/error', 307)
+
+let data
+if (order) {
+  data = { order, orders: null }
+} else if (orders) {
+  data = { order: null, orders }
+}
+
+if (!data) return Astro.redirect('/error', 307)
+---
+
+<Platform>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Nuevo hilo', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        {
+          typeParam !== undefined
+            ? `Nuevo hilo: ${THREAD_TYPES[Number(typeParam)]}`
+            : 'Nuevo hilo: Personalizado'
+        }
+      </h1>
+      {order !== null && <p class="opacity-85">{order.name}</p>}
+    </div>
+    <CreateThreadForm preselectedType={typeParam} data={data} client:load />
+  </div>
+</Platform>

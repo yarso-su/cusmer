@@ -1,0 +1,36 @@
+---
+import Account from '@/layouts/Account.astro'
+import { BadResponseError } from '@/lib/errors'
+
+let message =
+  'No hemos podido verificar tu correo electrónico. Por favor, inténtalo más tarde.'
+
+export const prerender = false
+
+const params = Astro.url.searchParams
+const token = params.get('token')
+
+if (token) {
+  try {
+    const res = await fetch(
+      `${import.meta.env.API_URL}/users/verify-email?token=${token}`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    message =
+      'Tu correo electrónico ha sido verificado correctamente. Ya puedes iniciar sesión en la plataforma.'
+  } catch (error) {
+    console.error(error)
+  }
+}
+---
+
+<Account
+  title="Verificación de correo electrónico"
+  key="Verificación"
+  description={message}
+/>

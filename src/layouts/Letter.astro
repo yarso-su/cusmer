@@ -1,0 +1,107 @@
+---
+import Basehead from '@/components/shared/Basehead.astro'
+import X from '@lucide/astro/icons/x'
+import Mail from '@lucide/astro/icons/mail'
+import LogOut from '@lucide/astro/icons/log-out'
+
+export interface Props {
+  lang: 'en' | 'es'
+  meta: {
+    title: string
+    description: string
+  }
+  title: string
+  sub_a: string
+  sub_b: string
+}
+
+const { lang, meta, title, sub_a, sub_b }: Props = Astro.props
+
+const returnText = lang === 'en' ? 'Go back to home' : 'Volver al inicio'
+const getInTouchText = lang === 'en' ? 'Get in touch' : 'Contáctanos'
+const footerRightsText =
+  lang === 'en'
+    ? '© 2025 Works. All rights reserved.'
+    : '© 2025 Works. Todos los derechos reservados.'
+---
+
+<!doctype html>
+<html {lang}>
+  <head>
+    <Basehead title={meta.title} description={meta.description} />
+  </head>
+  <body class="grid grid-rows-[1fr_auto] h-dvh">
+    <div class="overflow-y-auto">
+      <main
+        class="pt-8 pb-16 lg:py-24 mx-auto w-[90%] 2xl:w-[60%] content-center"
+      >
+        <div class="mb-4 flex justify-between items-center">
+          <a href="/" class="text-base lg:text-lg font-ubuntu">
+            <span class="font-semibold">Works </span>
+            <span class="text-contrast">by yarso</span>
+          </a>
+          <a href="/" aria-label={returnText}>
+            <X
+              class="size-3 lg:size-4 transition-colors duration-200 rounded-sm hover:bg-black/5 p-1 box-content"
+            />
+            <span class="sr-only">{returnText}</span>
+          </a>
+        </div>
+        <section>
+          <h1
+            class="leading-[1.5] text-lg lg:text-2xl font-semibold tracking-tight font-geist text-contrast"
+          >
+            {title}
+          </h1>
+
+          <h2
+            class="leading-[1.1] text-2xl lg:text-3xl font-semibold tracking-tight font-geist"
+          >
+            {sub_a}
+            <span
+              class="underline underline-offset-2 decoration-contrast text-black dark:text-white"
+              >{sub_b}</span
+            >
+          </h2>
+          <slot />
+        </section>
+      </main>
+    </div>
+    <footer class="bg-csecondary pt-2 pb-4 md:py-4 cborder-t">
+      <div
+        class="mx-auto w-[90%] 2xl:w-[60%] mb-4 flex justify-between items-center"
+      >
+        <div>
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 underline-offset-2 group text-sm md:text-base lg:text-lg"
+          >
+            <LogOut class="size-3 lg:size-4" color="var(--color-contrast)" />
+
+            <span
+              class="group-hover:text-black dark:group-hover:text-white transition-colors duration-200"
+            >
+              {returnText}</span
+            >
+          </a>
+        </div>
+        <div>
+          <a
+            href="/#contact"
+            class="inline-flex items-center gap-2 underline-offset-2 text-sm md:text-base lg:text-lg group"
+          >
+            <Mail color="var(--color-contrast)" class="size-3 lg:size-4" />
+            <span
+              class="group-hover:text-black dark:group-hover:text-white transition-colors duration-200"
+            >
+              {getInTouchText}
+            </span>
+          </a>
+        </div>
+      </div>
+      <p class="text-center lg:text-base text-xs opacity-80">
+        {footerRightsText}
+      </p>
+    </footer>
+  </body>
+</html>

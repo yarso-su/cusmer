@@ -1,0 +1,104 @@
+---
+import FileBadge from '@lucide/astro/icons/file-badge'
+import Headset from '@lucide/astro/icons/headset'
+import Monitor from '@lucide/astro/icons/monitor-cog'
+import FileLock from '@lucide/astro/icons/file-lock-2'
+import FileCheck from '@lucide/astro/icons/file-check-2'
+import Bird from '@lucide/astro/icons/bird'
+---
+
+<section class="bg-csecondary py-12 lg:py-24 cborder-t">
+  <div class="mx-auto w-[90%] 2xl:w-[60%]">
+    <div class="flex flex-col gap-4 lg:gap-8">
+      <div>
+        <p
+          class="leading-[1.5] text-lg lg:text-2xl font-semibold tracking-tight font-geist text-contrast"
+        >
+          Nuestro objetivo
+        </p>
+        <h2
+          class="leading-[1.1] text-2xl lg:text-3xl font-semibold tracking-tight font-geist"
+        >
+          Software profesional y confiable desde Colima
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 cborder">
+        <div class="p-4 lg:p-6 cborder-b lg:border-r">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <FileLock color="var(--color-contrast)" class="size-4 lg:size-5" />
+            Contratos claros, sólidos
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Plantillas integradas, firmadas electrónicamente vía DocuSign para
+            mayor seguridad, eficiencia y simplicidad.
+          </p>
+        </div>
+        <div class="p-4 lg:p-6 cborder-b lg:border-r">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <FileBadge color="var(--color-contrast)" class="size-4 lg:size-5" />
+            Pagos seguros y flexibles
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Con Stripe como intermediario. Te ofrecemos la máxima seguridad y
+            flexibilidad en cada transacción.
+          </p>
+        </div>
+        <div class="p-4 lg:p-6 cborder-b">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <FileCheck color="var(--color-contrast)" class="size-4 lg:size-5" />
+            Facturación clara y directa
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Facturas generadas automáticamente con factura.com tras cada compra,
+            disponibles para consulta en cualquier momento.
+          </p>
+        </div>
+        <div class="p-4 lg:p-6 cborder-b lg:border-b-0 lg:border-r">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <Headset
+              color="var(--color-contrast)"
+              class="size-4 lg:size-5 text-contrast"
+            />
+            Soporte técnico personalizado
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Comunicación organizada y orientada a la solución. Disponibles de
+            lunes a sábados de 8:00 a 18:00 (GMT-6).
+          </p>
+        </div>
+        <div class="p-4 lg:p-6 cborder-b lg:border-b-0 lg:border-r">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <Monitor color="var(--color-contrast)" class="size-4 lg:size-5" />
+            Administración y monitoreo
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Ponemos en marcha tu proyecto y nosotros te ayudaremos a mantenerlo
+            en funcionamiento.
+          </p>
+        </div>
+        <div class="p-4 lg:p-6">
+          <h3
+            class="mb-1 lg:mb-2 md:text-lg lg:text-xl font-semibold tracking-tight inline-flex items-center gap-2"
+          >
+            <Bird color="var(--color-contrast)" class="size-4 lg:size-5" />
+            Sin permanencias
+          </h3>
+          <p class="text-sm sm:text-base lg:text-lg">
+            Soluciones integrales sin compromiso de permanencia. Tú controlas la
+            continuidad de tu proyecto, no nosotros.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

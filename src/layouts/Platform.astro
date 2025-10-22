@@ -1,0 +1,29 @@
+---
+import Basehead from '@/components/shared/Basehead.astro'
+import SidebarWrapper from '@/components/platform/PlatformSidebarWrapper.tsx'
+import ValidateCookies from '@/components/shared/ValidateCookies.astro'
+
+interface Props {
+  server?: boolean
+}
+
+const { server = false } = Astro.props
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    {!server && <ValidateCookies server:defer />}
+    <Basehead
+      title="Works"
+      description="Accede fácilmente al estado de tus proyectos, consulta detalles de servicios y mantente en contacto con tu equipo de desarrollo desde un solo lugar."
+    />
+  </head>
+  <body>
+    <SidebarWrapper client:load>
+      <div class="mx-auto w-[90%] 2xl:w-[70%] h-[90%] overflow-hidden">
+        <slot />
+      </div>
+    </SidebarWrapper>
+  </body>
+</html>

@@ -1,0 +1,115 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { THREAD_STATUSES, THREAD_TYPES } from '@/lib/constants'
+import { validateCookies } from '@/lib/server'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+let threads: null | Array<{
+  id: number
+  name: string
+  type: number
+  status: number
+}> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/${id}/threads`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) {
+    throw new BadResponseError(res)
+  }
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  threads = data.threads
+} catch {
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Servicios', href: '/platform/services' },
+          { title: id, href: `/platform/services/${id}` },
+          { title: 'Hilos', href: '' }
+        ]}
+      />
+      <div class="mt-2 flex items-center gap-2">
+        <span>
+          <a
+            href={`/platform/services/${id}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Datos</a
+          ></span
+        >
+        <span>
+          <a
+            href={`/platform/services/${id}/contract`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Contrato</a
+          ></span
+        >
+        <span class="cborder-l pl-2">
+          <a
+            href={`/platform/services/${id}/payments`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Pagos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <h1 class="font-semibold tracking-tight">Hilos</h1>
+        </span>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        !threads || threads.length === 0 ? (
+          <div class="w-full h-full flex justify-center items-center">
+            <p class="text-center opacity-80 dark:opacity-60">
+              No hay hilos que mostrar
+            </p>
+          </div>
+        ) : (
+          <ul>
+            {threads.map(thread => (
+              <li>
+                <a
+                  href={`/platform/threads/${thread.id}`}
+                  class="cborder-b grid grid-cols-[1fr_auto_auto] p-2 pressable-hover"
+                >
+                  <p class="truncate">{thread.name}</p>
+                  <p class="cborder-l px-2 truncate">
+                    {THREAD_TYPES[thread.type]}
+                  </p>
+                  <p class="cborder-l pl-2 truncate">
+                    {THREAD_STATUSES[thread.status]}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Platform>

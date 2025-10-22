@@ -1,0 +1,73 @@
+---
+import ToggleTheme from '../shared/ToggleTheme.astro'
+import MobileNav from '../shared/MobileNav.astro'
+import Link from '../shared/Link.astro'
+import LogIn from '@lucide/astro/icons/log-in'
+---
+
+<header
+  class="z-50 backdrop-blur-md h-12 lg:h-16 fixed top-0 w-full flex justify-between items-center cborder-b lg:border-b-0"
+>
+  <div class="w-[90%] 2xl:w-[60%] mx-auto flex justify-between items-center">
+    <div class="flex items-center gap-4">
+      <a
+        href="/"
+        class="ml-1 lg:ml-0 font-ubuntu text-sm lg:pr-4 cborder-r border-r-0 lg:border-r-[1px]"
+        translate="no"
+        lang="en"
+      >
+        <span class="font-semibold">Works </span>
+        <span class="text-contrast">by yarso</span>
+      </a>
+      <nav class="hidden lg:block">
+        <ul class="flex gap-4">
+          <li>
+            <a
+              class="hover:underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors duration-200"
+              href="#home">Inicio</a
+            >
+          </li>
+          <li>
+            <a
+              class="hover:underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors duration-200"
+              href="#solutions">Soluciones</a
+            >
+          </li>
+          <li>
+            <a
+              class="hover:underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors duration-200"
+              href="#trust">Confianza</a
+            >
+          </li>
+          <li>
+            <a
+              class="hover:underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors duration-200"
+              href="/paginas-web/">Páginas web</a
+            >
+          </li>
+          <li>
+            <a
+              class="hover:underline underline-offset-2 hover:text-black dark:hover:text-white transition-colors duration-200"
+              href="/english-support/">English support</a
+            >
+          </li>
+        </ul>
+      </nav>
+    </div>
+    <div class="flex gap-1 items-center">
+      <ToggleTheme />
+      <div class="hidden lg:block">
+        <Link
+          variant="outline"
+          size="icon"
+          href="/account/login/"
+          aria-label="Ir a la página de inicio de sesión"
+        >
+          <LogIn />
+          <span class="sr-only"> Ir a la página de inicio de sesión </span>
+        </Link>
+      </div>
+      <MobileNav />
+    </div>
+  </div>
+</header>

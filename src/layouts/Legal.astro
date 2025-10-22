@@ -1,0 +1,106 @@
+---
+import Basehead from '@/components/shared/Basehead.astro'
+import Header from '@/components/legal/Header.astro'
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+const metaTitle = `${title} - Works`
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <Basehead title={metaTitle} description={description} noindex />
+  </head>
+  <body>
+    <Header />
+    <style is:global>
+      @reference "../styles/global.css";
+      #post {
+        h1,
+        h2,
+        h3 {
+          @apply font-bold mb-4;
+        }
+
+        h4,
+        h5 {
+          @apply font-semibold mb-4;
+        }
+        h1 {
+          @apply text-3xl lg:text-4xl;
+        }
+        h2 {
+          @apply text-xl lg:text-3xl;
+        }
+        h3 {
+          @apply text-lg lg:text-2xl pt-4 lg:pt-6;
+        }
+        h4 {
+          @apply text-base lg:text-xl pt-2;
+        }
+        h5 {
+          @apply text-base lg:text-xl pt-2;
+        }
+        img {
+          @apply border-[1px] rounded-sm border-zinc-800/10 dark:border-zinc-200/10 mb-6;
+        }
+        p {
+          @apply mb-4 text-sm sm:text-lg lg:text-xl;
+        }
+        a {
+          @apply underline underline-offset-2 decoration-contrast hover:text-black dark:hover:text-white transition-colors duration-200;
+        }
+
+        strong {
+          @apply text-black dark:text-white font-semibold;
+        }
+
+        hr {
+          @apply my-8 lg:my-12 !text-neutral-300 dark:!text-zinc-800;
+        }
+
+        ul {
+          @apply list-inside pl-2 lg:pl-4 mb-8 mt-6 list-none;
+        }
+
+        li {
+          @apply mb-1 lg:mb-2 text-sm sm:text-lg lg:text-xl before:content-['-'] before:mr-2;
+        }
+
+        li p {
+          @apply mb-0 p-0 m-0;
+          display: contents;
+        }
+
+        pre {
+          @apply rounded-sm p-2 overflow-x-auto max-w-[300px] sm:max-w-[640px] lg:max-w-none mb-4 text-sm lg:text-base font-mono mx-auto;
+        }
+
+        pre span {
+          @apply text-neutral-200;
+        }
+
+        code {
+          @apply text-sm lg:text-base font-mono;
+        }
+      }
+    </style>
+    <div class="h-dvh grid grid-rows-[auto_60px]">
+      <main class="mt-12 lg:mt-16">
+        <div class="grid grid-rows-[auto_1fr] h-full">
+          <slot />
+        </div>
+      </main>
+      <footer class="bg-csecondary p-2 lg:p-4 flex justify-center items-center">
+        <p class="opacity-80 dark:opacity-70 text-sm">
+          © 2025 Works. Todos los derechos reservados.
+        </p>
+      </footer>
+    </div>
+  </body>
+</html>

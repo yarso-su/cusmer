@@ -1,0 +1,161 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import OrderOptions from '@/components/su/orders/OrderOptions'
+import CalendarCheck from '@lucide/astro/icons/calendar-check'
+import User from '@lucide/astro/icons/user'
+import { validateCookies } from '@/lib/server'
+import ItemsList from '@/components/su/orders/ItemsList'
+import { ORDER_STATUSES } from '@/lib/constants'
+import type { Order } from '@/lib/types'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+let order: null | Omit<Order, 'id'> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/${id}`, {
+    method: 'GET',
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  const { is_recurring, portfolio_consent, ...rest } = body.order
+  order = {
+    ...rest,
+    is_recurring: Boolean(is_recurring),
+    portfolio_consent: Boolean(portfolio_consent)
+  }
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+
+if (!order) return Astro.redirect('/error', 307)
+const { items, user, discount, ...data } = order
+---
+
+<Su server>
+  <Breadcrumb
+    items={[
+      { title: 'Su', href: '/su' },
+      { title: 'Servicios', href: '/su/services' },
+      { title: id, href: '/' }
+    ]}
+  />
+  <div class="mt-2 flex items-center gap-2">
+    <h1 class="font-semibold tracking-tight">Datos</h1>
+    <span class="cborder-l pl-2">
+      <a
+        href={`/su/services/${id}/payments`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Pagos</a
+      ></span
+    >
+    <span class="cborder-l pl-2">
+      <a
+        href={`/su/services/${id}/threads`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Hilos</a
+      ></span
+    >
+    <span class="cborder-l pl-2">
+      <a
+        href={`/su/services/${id}/contract`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Contrato</a
+      ></span
+    >
+    <span class="cborder-l pl-2">
+      <a
+        href={`/su/services/${id}/logs`}
+        class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+        >Registros</a
+      ></span
+    >
+  </div>
+  <section class="mt-2">
+    <div class="flex items-end justify-between">
+      <div class="flex items-baseline gap-2">
+        <h2
+          class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+          id="order-name"
+        >
+          {order.name}
+        </h2>
+        <span
+          id="subscription-span"
+          class={` opacity-60 ${order.is_recurring ? 'block' : 'hidden'}`}
+          ><CalendarCheck class="size-4" /></span
+        >
+      </div>
+      <OrderOptions id={Number(id)} data={data} client:load />
+    </div>
+    <div class="bg-csecondary cborder mt-2">
+      <div class="p-2 grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto_auto_auto]">
+        <p class="truncate cborder-b sm:border-b-0 pb-1 sm:pb-0" id="order-tag">
+          {order.tag}
+        </p>
+        <p
+          class="truncate cborder-l pl-2 cborder-b sm:border-b-0 pb-1 sm:pb-0"
+          id="order-status"
+        >
+          {ORDER_STATUSES[order.status]}
+        </p>
+        <p
+          class="truncate cborder-l sm:border-l-0 sm:border-b-[1px] pt-1 sm:pt-0 px-2 inline-flex items-center gap-1"
+        >
+          <span id="order-duration">
+            {order.duration_weeks}
+          </span>
+          <span class="opacity-60">(semanas)</span>
+        </p>
+        <p
+          class="truncate cborder-l px-2 inline-flex items-center gap-1 pt-1 sm:pt-0"
+        >
+          <span id="order-installments">
+            {order.payment_installments}
+          </span>
+          <span class="opacity-60">(cuotas)</span>
+        </p>
+        <a
+          href={`/su/users/${order.user.id}`}
+          class="truncate cborder-l pl-2 hover:underline underline-offset-2 inline-flex items-center gap-1 opacity-85"
+        >
+          <User class="size-4" />
+          <p>
+            {order.user.name.split(' ')[0]}
+          </p>
+        </a>
+      </div>
+      <p class="p-2 cborder-t leading-7" id="order-description">
+        {order.description}
+      </p>
+    </div>
+  </section>
+  <ItemsList
+    id={Number(id)}
+    data={{
+      status: order.status,
+      items: order.items,
+      payment_installments: order.payment_installments,
+      discount
+    }}
+    client:load
+  />
+</Su>

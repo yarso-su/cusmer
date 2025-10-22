@@ -1,0 +1,101 @@
+---
+import { API_URL } from 'astro:env/client'
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import ReceiptText from '@lucide/astro/icons/receipt-text'
+import Box from '@lucide/astro/icons/box'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import { format } from '@formkit/tempo'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+type TPayment = {
+  id: number
+  order_id: number
+  amount: number
+  created_at: Date
+}
+let payments: Array<TPayment> = []
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/users/me/payments`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  payments = data.payments
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Pagos', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight"
+      >
+        Historial de pagos
+      </h1>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        payments.length === 0 ? (
+          <div class="w-full h-full flex items-center justify-center">
+            <p class="opacity-60 dark:opacity-40">No hay pagos que mostrar</p>
+          </div>
+        ) : (
+          <ul class="grid grid-cols-1 max-h-max overflow-y-auto">
+            {payments.map(payment => (
+              <li class="cborder-b grid grid-cols-[auto_1fr_auto_auto_auto] p-2">
+                <div class="pl-2 pr-3">
+                  <p class="text-center">{payment.id}</p>
+                </div>
+                <p class="cborder-l pl-2 truncate">
+                  ${Number(payment.amount).toLocaleString()} MXN
+                </p>
+                <p class="cborder-l px-2 truncate">
+                  {format(payment.created_at, 'long', 'es')}
+                </p>
+                <a
+                  aria-label="Descargar comprobante"
+                  target="_blank"
+                  href={`${API_URL}/payments/${payment.id}`}
+                  class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l px-2"
+                >
+                  <ReceiptText class="size-4" />
+                </a>
+                <a
+                  aria-label="Ver servicio relacionado"
+                  href={`/platform/services/${payment.order_id}`}
+                  class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l pl-2"
+                >
+                  <Box class="size-4" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Platform>

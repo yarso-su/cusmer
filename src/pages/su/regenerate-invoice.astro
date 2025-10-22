@@ -1,0 +1,24 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import RegenerateInvoiceForm from '@/components/su/RegenerateInvoiceForm'
+---
+
+<Su>
+  <div class="grid grid-rows-[auto_1fr] h-full">
+    <div class="mb-4">
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Regenerar', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Cancelar factura y generar nueva
+      </h1>
+    </div>
+    <RegenerateInvoiceForm client:load />
+  </div>
+</Su>

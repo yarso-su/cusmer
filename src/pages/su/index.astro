@@ -1,0 +1,348 @@
+---
+import { API_URL } from 'astro:env/client'
+import ReceiptText from '@lucide/astro/icons/receipt-text'
+import Taxes from '@/components/su/Taxes'
+import Box from '@lucide/astro/icons/box'
+import AccountOptions from '@/components/shared/AccountOptions'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import Scale from '@lucide/astro/icons/scale'
+import Plus from '@lucide/astro/icons/plus'
+import { BadResponseError } from '@/lib/errors'
+import {
+  ORDER_STATUSES,
+  THREAD_TYPES,
+  THREAD_STATUSES_KEYS
+} from '@/lib/constants'
+import { format } from '@formkit/tempo'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
+
+export const prerender = false
+
+type TSummary = {
+  taxes: { amount: number; last: number } | null
+  total: number
+}
+type TOrder = { id: number; name: string; tag: string; status: number }
+type TThread = { id: number; name: string; type: number; status: number }
+type TPayment = {
+  id: number
+  order_id: number
+  amount: number
+  created_at: Date
+}
+
+async function fetchSummary(): Promise<TSummary> {
+  const res = await fetch(`${import.meta.env.API_URL}/payments/summary`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body
+}
+
+async function fetchOrders(): Promise<Array<TOrder>> {
+  const res = await fetch(`${import.meta.env.API_URL}/orders?limit=5`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body.orders
+}
+
+async function fetchThreads(): Promise<Array<TThread>> {
+  const res = await fetch(
+    `${import.meta.env.API_URL}/threads?limit=5&status=${THREAD_STATUSES_KEYS.OPEN}`,
+    {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    }
+  )
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body.threads
+}
+
+async function fetchPayments(): Promise<Array<TPayment>> {
+  const res = await fetch(`${import.meta.env.API_URL}/payments?limit=5`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body.payments
+}
+
+let data: [Array<TOrder>, Array<TThread>, Array<TPayment>, TSummary] | null =
+  null
+
+try {
+  data = await Promise.all([
+    fetchOrders(),
+    fetchThreads(),
+    fetchPayments(),
+    fetchSummary()
+  ])
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+
+const [orders, threads, payments, summary] = data
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <!-- Header Section -->
+    <div>
+      <Breadcrumb items={[{ title: 'Su', href: '/' }]} />
+      <div class="flex justify-between items-end">
+        <h1
+          class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+        >
+          Bienvenido de nuevo
+        </h1>
+        <a
+          href="/su/services"
+          class="hover:underline underline-offset-2 inline-flex gap-1 items-center opacity-85 text-sm"
+        >
+          <Plus color="var(--color-contrast)" class="size-4" />
+          <p>Ver más</p>
+        </a>
+      </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div
+      class="grid grid-rows-[1fr_1fr] lg:grid-rows-[220px_220px_1fr] gap-2 min-h-0"
+    >
+      <!-- First Row: Orders Section -->
+      <section class="bg-csecondary cborder min-h-0 overflow-hidden">
+        {
+          orders.length === 0 ? (
+            <div class="w-full flex flex-col items-center justify-center h-full">
+              <p class="opacity-80 lg:opacity-60">
+                No hay servicios que mostrar
+              </p>
+            </div>
+          ) : (
+            <ul class="h-full overflow-y-auto">
+              {orders.map(order => (
+                <li>
+                  <a
+                    class="cborder-b grid grid-cols-[1fr_1fr_auto] lg:grid-cols-[1fr_1fr_160px] p-2 pressable-hover"
+                    href={`/su/services/${order.id}`}
+                  >
+                    <p class="truncate">{order.name}</p>
+                    <p class="cborder-l pl-2 truncate">{order.tag}</p>
+                    <div class="px-2">
+                      <p class="cborder-l pl-2">
+                        {ORDER_STATUSES[order.status]}
+                      </p>
+                    </div>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )
+        }
+      </section>
+
+      <!-- Second Row: Threads and Payments Grid -->
+      <div
+        class="grid grid-rows-[1fr_1fr] lg:grid-cols-[1fr_2fr] lg:grid-rows-1 gap-2 min-h-0 pt-2"
+      >
+        <!-- Payments Section -->
+        <section class="flex flex-col min-h-0 gap-1">
+          <h2 class="text-lg lg:text-xl font-semibold tracking-tight">
+            Historial de Pagos
+          </h2>
+          <div class="bg-csecondary cborder flex-1 min-h-0 overflow-hidden">
+            {
+              payments.length === 0 ? (
+                <div class="w-full flex flex-col items-center justify-center h-full">
+                  <p class="opacity-80 lg:opacity-60">
+                    No hay pagos que mostrar
+                  </p>
+                </div>
+              ) : (
+                <ul class="h-full overflow-y-auto">
+                  {payments.map(payment => (
+                    <li class="cborder-b grid grid-cols-[1fr_auto_auto_auto] lg:grid-cols-[1fr_1fr_auto_auto] p-2">
+                      <p class="truncate">
+                        ${Number(payment.amount).toLocaleString()} MXN
+                      </p>
+                      <p class="cborder-l px-2 truncate">
+                        {format(payment.created_at, 'long', 'es')}
+                      </p>
+                      <a
+                        aria-label="Descargar comprobante"
+                        target="_blank"
+                        href={`${API_URL}/payments/${payment.id}`}
+                        class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l px-2"
+                      >
+                        <ReceiptText class="size-4" />
+                      </a>
+                      <a
+                        aria-label="Ver servicio relacionado"
+                        href={`/su/services/${payment.order_id}`}
+                        class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l pl-2"
+                      >
+                        <Box class="size-4" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+          </div>
+        </section>
+
+        <!-- Threads Section -->
+        <section class="flex flex-col min-h-0 gap-1">
+          <div class="flex justify-between items-end flex-shrink-0">
+            <h2 class="text-lg lg:text-xl font-semibold tracking-tight">
+              Hilos
+            </h2>
+            <a
+              href="/su/threads"
+              class="hover:underline underline-offset-2 inline-flex gap-1 items-center opacity-85 text-sm"
+            >
+              <Plus color="var(--color-contrast)" class="size-4" />
+              <p>Ver más</p>
+            </a>
+          </div>
+          <div class="cborder bg-csecondary flex-1 min-h-0 overflow-hidden">
+            {
+              threads.length === 0 ? (
+                <div class="w-full flex flex-col items-center justify-center h-full">
+                  <p class="opacity-80 lg:opacity-60">
+                    No hay hilos que mostrar
+                  </p>
+                </div>
+              ) : (
+                <ul class="h-full overflow-y-auto">
+                  {threads.map(thread => (
+                    <li>
+                      <a
+                        class="cborder-b grid grid-cols-[1fr_auto] lg:grid-cols-[1fr_200px] p-2 pressable-hover"
+                        href={`/su/threads/${thread.id}`}
+                      >
+                        <p class="truncate">{thread.name}</p>
+                        <p class="cborder-l px-2 truncate">
+                          {THREAD_TYPES[thread.type]}
+                        </p>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )
+            }
+          </div>
+        </section>
+      </div>
+
+      <!-- Third Row: Footer Section (Desktop Only) -->
+      <div class="w-full hidden lg:block">
+        <div class="w-full grid grid-cols-[1fr_2fr] gap-2">
+          <Alert>
+            <Scale />
+            <AlertTitle>
+              ¿Tienes dudas legales o sobre cómo manejamos tu información?
+            </AlertTitle>
+            <AlertDescription>
+              <p>Siempre puedes consultar los siguientes documentos:</p>
+              <ul class="list-none">
+                <li>
+                  - <a
+                    href="/legal/terms/"
+                    target="_blank"
+                    class="hover:underline">Términos y condiciones de uso</a
+                  >
+                </li>
+                <li>
+                  - <a
+                    href="/legal/policies/"
+                    target="_blank"
+                    class="hover:underline">Política de privacidad</a
+                  >
+                </li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+          <div class="w-full h-full grid grid-rows-[auto_1fr] gap-2">
+            <div class="w-full h-full grid grid-cols-[1fr_1fr_auto] gap-2">
+              <Taxes data={summary.taxes} client:load />
+              <div class="flex justify-center items-center cborder">
+                {
+                  summary.total > 0 ? (
+                    <p>
+                      <span class="decoration-contrast underline  underline-offset-2">
+                        ${(Number(summary.total) * 0.7).toLocaleString()} MXN
+                      </span>{' '}
+                      min.
+                    </p>
+                  ) : (
+                    <p>
+                      No hay{' '}
+                      <span class="decoration-contrast underline underline-offset-2">
+                        nada
+                      </span>{' '}
+                      que mostrar
+                    </p>
+                  )
+                }
+              </div>
+              <AccountOptions prefix="su" client:load />
+            </div>
+            <div class="w-full h-full flex items-center justify-center cborder">
+              <span>
+                Explora el contenido publicado en el <a
+                  href="https://es.yarso.dev"
+                  target="_blank"
+                  class="underline underline-offset-2 text-contrast hover:opacity-80 transition-opacity duration-200"
+                  >blog</a
+                >. Puedes contribuir con tus propios artículos cuando lo desees.
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</Su>
+<!-- class="w-full h-full flex justify-center cborder bg-csecondary items-center hover:bg-accent hover:text-accent-foreground dark:hover:bg-neutral-900 gap-2" -->

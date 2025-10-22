@@ -1,0 +1,99 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import Plus from '@lucide/astro/icons/plus'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import {
+  THREAD_STATUSES,
+  THREAD_STATUSES_KEYS,
+  THREAD_TYPES
+} from '@/lib/constants'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+type TThread = { id: number; name: string; type: number; status: number }
+let threads: Array<TThread> = []
+
+try {
+  const res = await fetch(
+    `${import.meta.env.API_URL}/users/me/threads?status=${THREAD_STATUSES_KEYS.OPEN}`,
+    {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    }
+  )
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  threads = data.threads
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Hilos', href: '/' }
+        ]}
+      />
+      <div class="flex justify-between items-end">
+        <h1
+          class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+        >
+          Hilos
+        </h1>
+        <a
+          href="/platform/new-thread"
+          class="hover:underline underline-offset-2 inline-flex gap-1 items-center"
+        >
+          <Plus class="size-4 text-contrast" />
+          <p>Nuevo hilo</p>
+        </a>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        threads.length === 0 ? (
+          <div class="w-full h-full flex items-center justify-center">
+            <p class="opacity-60 dark:opacity-40">No hay hilos que mostrar</p>
+          </div>
+        ) : (
+          <ul class="grid grid-cols-1 max-h-[90%]">
+            {threads.map(thread => (
+              <li>
+                <a
+                  class="cborder-b grid grid-cols-[1fr_auto_auto] p-2 pressable-hover"
+                  href={`/platform/threads/${thread.id}`}
+                >
+                  <p class="truncate">{thread.name}</p>
+                  <p class="cborder-l px-2 truncate">
+                    {THREAD_TYPES[thread.type]}
+                  </p>
+                  <p class="cborder-l pl-2 truncate">
+                    {THREAD_STATUSES[thread.status]}
+                  </p>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Platform>

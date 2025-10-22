@@ -1,0 +1,68 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { validateCookies } from '@/lib/server'
+import GenerateContractForm from '@/components/su/GenerateContractForm'
+import type { OrderWithContract } from '@/lib/types'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+let data: null | OrderWithContract = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/${id}/contract`, {
+    method: 'GET',
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  data = body.order
+} catch (error) {
+  return Astro.redirect('/error', 307)
+}
+
+if (!data) return Astro.redirect('/error', 307)
+const { status, contract, ...order } = data
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] h-full">
+    <div class="mb-4">
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Servicios', href: '/su/services' },
+          { title: id, href: `/su/services/${id}` },
+          { title: 'Contrato', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Contrato
+      </h1>
+    </div>
+    <GenerateContractForm
+      id={Number(id)}
+      status={status}
+      contract={contract}
+      order={order}
+      client:load
+    />
+  </div>
+</Su>

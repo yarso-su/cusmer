@@ -1,0 +1,135 @@
+---
+import { API_URL } from 'astro:env/client'
+import ReceiptText from '@lucide/astro/icons/receipt-text'
+import Box from '@lucide/astro/icons/box'
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { validateCookies } from '@/lib/server'
+import { THREAD_STATUSES_KEYS } from '@/lib/constants'
+import { format } from '@formkit/tempo'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+let payments: null | Array<{
+  id: number
+  order_id: number
+  amount: number
+  created_at: Date
+}> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/users/${id}/payments`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  payments = data.payments
+} catch {
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Usuarios', href: '/su/users' },
+          { title: id.split('-')[0], href: `/su/users/${id}` },
+          { title: 'Pagos', href: '' }
+        ]}
+      />
+      <div class="mt-2 flex items-center gap-2">
+        <span>
+          <a
+            href={`/su/users/${id}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Datos</a
+          ></span
+        >
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/services`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Servicios</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <h1 class="font-semibold tracking-tight">Pagos</h1>
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/threads?status=${THREAD_STATUSES_KEYS.OPEN}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Hilos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/users/${id}/secrets`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Credenciales</a
+          >
+        </span>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        !payments || payments.length === 0 ? (
+          <div class="w-full h-full flex justify-center items-center">
+            <p class="text-center opacity-80 dark:opacity-60">
+              No hay pagos que mostrar
+            </p>
+          </div>
+        ) : (
+          <ul>
+            {payments.map(payment => (
+              <li class="cborder-b grid grid-cols-[auto_1fr_auto_auto_auto] p-2">
+                <div class="pl-2 pr-3">
+                  <p class="text-center">{payment.id}</p>
+                </div>
+                <p class="cborder-l pl-2 truncate">
+                  ${Number(payment.amount).toLocaleString()} MXN
+                </p>
+                <p class="cborder-l px-2 truncate">
+                  {format(payment.created_at, 'long', 'es')}
+                </p>
+                <a
+                  aria-label="Descargar comprobante"
+                  target="_blank"
+                  href={`${API_URL}/payments/${payment.id}`}
+                  class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l px-2"
+                >
+                  <ReceiptText class="size-4" />
+                </a>
+                <a
+                  aria-label="Ver servicio relacionado"
+                  href={`/platform/services/${payment.order_id}`}
+                  class="content-center transition-opacity duration-200 hover:opacity-80 cborder-l pl-2"
+                >
+                  <Box class="size-4" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Su>

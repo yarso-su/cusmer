@@ -1,0 +1,24 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import PaymentsList from '@/components/su/payments/PaymentsList.tsx'
+---
+
+<Su>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Pagos', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Historial de pagos
+      </h1>
+    </div>
+    <PaymentsList client:load />
+  </div>
+</Su>

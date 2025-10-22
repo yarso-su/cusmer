@@ -1,0 +1,59 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import LinkThreadForm from '@/components/platform/LinkThreadForm'
+import { BadResponseError } from '@/lib/errors'
+import type { OrderSummary } from '@/lib/types'
+import { validateCookies } from '@/lib/server'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { searchParams } = Astro.url
+const id = searchParams.get('id')
+if (!id) return Astro.redirect('/platform', 307)
+
+let orders: null | Array<OrderSummary> = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/summary/names`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  orders = data.names
+} catch (err) {
+  Astro.redirect('/platform', 307)
+}
+
+if (!orders) return Astro.redirect('/platform', 307)
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] h-full">
+    <div class="mb-4">
+      <Breadcrumb
+        items={[
+          { title: 'Platform', href: '/platform' },
+          { title: 'Vincular', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Vincular a servicio
+      </h1>
+    </div>
+    <LinkThreadForm id={Number(id)} orders={orders} client:load />
+  </div>
+</Platform>

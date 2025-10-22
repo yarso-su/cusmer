@@ -1,0 +1,37 @@
+---
+import ToggleTheme from '../shared/ToggleTheme.astro'
+import Link from '../shared/Link.astro'
+import LogIn from '@lucide/astro/icons/log-in'
+import MobileNav from '../shared/MobileNav.astro'
+---
+
+<header
+  class="z-10 backdrop-blur-md h-12 lg:h-16 fixed top-0 w-full flex justify-between items-center cborder-b lg:border-b-0"
+>
+  <div class="w-[90%] 2xl:w-[60%] mx-auto flex justify-between items-center">
+    <a
+      href="/"
+      class="ml-1 lg:ml-0 text-sm font-ubuntu"
+      translate="no"
+      lang="en"
+    >
+      <span class="font-semibold">Works </span>
+      <span class="text-contrast">by yarso</span>
+    </a>
+    <div class="flex items-center gap-1">
+      <ToggleTheme />
+      <div class="hidden lg:block">
+        <Link
+          variant="outline"
+          size="icon"
+          href="/account/login/"
+          aria-label="Ir a la página de inicio de sesión"
+        >
+          <LogIn />
+          <span class="sr-only"> Ir a la página de inicio de sesión </span>
+        </Link>
+      </div>
+      <MobileNav />
+    </div>
+  </div>
+</header>

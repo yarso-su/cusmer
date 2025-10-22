@@ -1,0 +1,28 @@
+---
+import Arrow from '@lucide/astro/icons/arrow-left-to-line'
+
+interface Props {
+  fallback: string
+}
+
+const { fallback } = Astro.props
+---
+
+<button
+  class="inline-flex mb-2 lg:mb-0 items-center gap-1 hover:underline"
+  id="go-back"
+>
+  <Arrow class="w-4 h-4" />
+  <p class="hidden lg:block">Regresar</p>
+</button>
+<script is:inline define:vars={{ fallback }}>
+  function back() {
+    if (window.history.length > 1) {
+      window.history.back()
+    } else {
+      window.location.replace(fallback)
+    }
+  }
+
+  document.getElementById('go-back').addEventListener('click', back)
+</script>

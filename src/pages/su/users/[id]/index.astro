@@ -1,0 +1,114 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import UserOptions from '@/components/su/users/UserOptions.tsx'
+import { validateCookies } from '@/lib/server'
+import { THREAD_STATUSES_KEYS } from '@/lib/constants'
+import type { User } from '@/lib/types'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const ROLES = ['Sin registrar', 'Administrador', 'Desarrollador', 'Cliente']
+const { id = 'unkown' } = Astro.params
+
+let user: null | User = null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/users/${id}`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  user = data.user
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+
+if (!user) return Astro.redirect('/error', 307)
+---
+
+<Su server>
+  <Breadcrumb
+    items={[
+      { title: 'Su', href: '/su' },
+      { title: 'Usuarios', href: '/su/users' },
+      { title: id.split('-')[0], href: '/su/users' }
+    ]}
+  />
+  <div class="mt-2">
+    <div class="flex items-center gap-2">
+      <h1 class="font-semibold tracking-tight">Datos</h1>
+      <span class="cborder-l pl-2">
+        <a
+          href={`/su/users/${id}/services`}
+          class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+          >Servicios</a
+        ></span
+      >
+      <span class="cborder-l pl-2">
+        <a
+          href={`/su/users/${id}/payments`}
+          class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+          >Pagos</a
+        >
+      </span>
+      <span class="cborder-l pl-2">
+        <a
+          href={`/su/users/${id}/threads?status=${THREAD_STATUSES_KEYS.OPEN}`}
+          class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+          >Hilos</a
+        >
+      </span>
+      <span class="cborder-l pl-2">
+        <a
+          href={`/su/users/${id}/secrets`}
+          class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+          >Credenciales</a
+        >
+      </span>
+    </div>
+    <section class="mt-2">
+      <div class="flex justify-between items-end">
+        <h2
+          class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+        >
+          <p>
+            {user.name}
+          </p>
+        </h2>
+        <UserOptions id={id} active={user.active} client:load />
+      </div>
+      <article
+        class="mt-2 grid grid-cols-[1fr_auto_auto_auto] bg-csecondary cborder p-2"
+      >
+        <p class="truncate">{user.email}</p>
+        <div class="px-1">
+          <p class="cborder-l pl-2">{ROLES[user.role]}</p>
+        </div>
+        <div class="px-1">
+          <p class="cborder-l pl-2">
+            {user.verified ? 'Verificado' : 'No verificado'}
+          </p>
+        </div>
+        <div class="px-1">
+          <p class="cborder-l pl-2">{user.active ? 'Activo' : 'Inactivo'}</p>
+        </div>
+      </article>
+    </section>
+  </div>
+</Su>

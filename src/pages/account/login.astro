@@ -1,0 +1,13 @@
+---
+import Account from '@/layouts/Account.astro'
+import LoginForm from '@/components/account/LoginForm.tsx'
+---
+
+<Account
+  login
+  key="Login"
+  title="Inicia sesión en la plataforma"
+  description="Ingresa a la plataforma para darle seguimiento a tus proyectos. Estamos encantados de ayudarte a alcanzar tus objetivos."
+>
+  <LoginForm client:load />
+</Account>

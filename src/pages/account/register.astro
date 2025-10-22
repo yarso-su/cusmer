@@ -1,0 +1,13 @@
+---
+import Account from '@/layouts/Account.astro'
+import RegisterForm from '@/components/account/RegisterForm'
+---
+
+<Account
+  tokenRequired
+  key="Registro"
+  title="Registrate para empezar"
+  description="Crea una cuenta para empezar a alcanzar tus objetivos. Déjanos encargarnos de los detalles técnicos y concéntrate en desarrollar tus ideas."
+>
+  <RegisterForm client:load />
+</Account>

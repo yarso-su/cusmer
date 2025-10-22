@@ -1,0 +1,36 @@
+---
+import Account from '@/layouts/Account.astro'
+import { BadResponseError } from '@/lib/errors'
+
+let message =
+  'No hemos podido actualizar tu correo electrónico. Por favor, inténtalo más tarde.'
+
+export const prerender = false
+const params = Astro.url.searchParams
+const token = params.get('token')
+
+if (token) {
+  try {
+    const res = await fetch(
+      `${import.meta.env.API_URL}/users/update-email?token=${token}`,
+      {
+        method: 'PATCH'
+      }
+    )
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    message =
+      'Tu correo electrónico ha sido actualizado correctamente. Ya puedes iniciar sesión con tu nuevo correo electrónico.'
+  } catch (error) {
+    Astro.redirect('/error', 307)
+  }
+}
+---
+
+<Account
+  tokenRequired
+  key="Correo electrónico"
+  title="Actualización de correo electrónico"
+  description={message}
+/>

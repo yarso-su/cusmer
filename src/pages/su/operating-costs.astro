@@ -1,0 +1,81 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import Plus from '@lucide/astro/icons/plus'
+import OperatingCostsList from '@/components/su/OperatingCostsList'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+type TCost = {
+  id: number
+  amount: string
+  note: string
+}
+let costs: Array<TCost> = []
+
+try {
+  const res = await fetch(
+    `${import.meta.env.API_URL}/internal/operating-costs`,
+    {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    }
+  )
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  costs = data.costs
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Costos', href: '/' }
+        ]}
+      />
+      <div class="flex justify-between items-end">
+        <h1
+          class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight"
+        >
+          Costos operativos
+        </h1>
+        <button
+          id="add-cost"
+          class="inline-flex gap-1 items-center hover:opacity-80 transition-opacity duration-200"
+        >
+          <Plus class="size-4 text-contrast" />
+          <p>Agregar entrada</p>
+        </button>
+        <script is:inline>
+          const btn = document.getElementById('add-cost')
+          if (btn) {
+            btn.addEventListener('click', () => {
+              document.dispatchEvent(new CustomEvent('show-add-cost-form'))
+            })
+          }
+        </script>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      <OperatingCostsList costs={costs} client:load />
+    </section>
+  </div>
+</Su>

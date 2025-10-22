@@ -1,0 +1,116 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import Link from '@/components/shared/Link.astro'
+import UpdateBillingProfile from '@/components/platform/UpdateBillingProfile'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import type { Regime } from '@/lib/types'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+async function fetchProfile(): Promise<{ foreign: boolean; data: any } | null> {
+  const res = await fetch(`${import.meta.env.API_URL}/users/billing-profile`, {
+    method: 'GET',
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body.profile
+}
+
+async function fetchCatalog(): Promise<{
+  regimes: Array<Regime>
+}> {
+  const res = await fetch(
+    `${import.meta.env.API_URL}/users/billing/predefined-values`,
+    {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    }
+  )
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body
+}
+
+let data
+
+try {
+  data = await Promise.all([fetchProfile(), fetchCatalog()])
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+
+const [profile, catalog] = data
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Facturación', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Perfil de facturación
+      </h1>
+    </div>
+    {
+      profile !== null ? (
+        <div class="mt-2">
+          <UpdateBillingProfile
+            profile={profile}
+            catalog={catalog}
+            client:load
+          />
+        </div>
+      ) : (
+        <div class="flex flex-col items-center justify-center">
+          <div>
+            <h2 class="text-2xl lg:text-3xl font-bold tracking-tight text-balance font-geist">
+              !Oops, parece que aun no has creado un perfil de facturación!
+            </h2>
+            <p class="mt-2 lg:text-lg pacity-85">
+              Para poder facturar y comenzar a contabilizar tus servicios, debes
+              crear un perfil de facturación.
+            </p>
+            <div class="flex justify-center mt-12 lg:mt-8">
+              <Link
+                class="lg:px-12 w-full lg:w-auto"
+                href="/platform/billing/new-profile"
+                aria-label="Ir a crear un nuevo perfil de facturación"
+              >
+                Crear perfil de facturación
+              </Link>
+            </div>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</Platform>

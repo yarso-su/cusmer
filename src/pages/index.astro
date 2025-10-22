@@ -1,0 +1,20 @@
+---
+import Solutions from '@/components/landing/Solutions.astro'
+import Platform from '@/components/landing/Platform.astro'
+import Header from '@/components/landing/Header.astro'
+import Masthead from '@/components/landing/Masthead.astro'
+import Trust from '@/components/landing/Trust.astro'
+import Landing from '@/layouts/Landing.astro'
+import Footer from '@/components/landing/Footer.astro'
+---
+
+<Landing>
+  <Header />
+  <main class="pt-12 lg:pt-16">
+    <Masthead />
+    <Platform />
+    <Solutions />
+    <Trust />
+  </main>
+  <Footer />
+</Landing>

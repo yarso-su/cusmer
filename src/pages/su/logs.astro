@@ -1,0 +1,88 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import { format } from '@formkit/tempo'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+type Log = {
+  origin: string
+  content: string
+  created_at: Date
+}
+let logs: Array<Log> = []
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/logs`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  logs = data.logs
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Logs', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight"
+      >
+        Registros
+      </h1>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        logs.length === 0 ? (
+          <div class="w-full h-full flex items-center justify-center">
+            <p class="opacity-60 dark:opacity-40">
+              No hay registros que mostrar
+            </p>
+          </div>
+        ) : (
+          <ul class="grid grid-cols-1 max-h-max overflow-y-auto">
+            {logs.map(log => (
+              <li class="cborder-b bg-cprimary">
+                <div class="flex justify-between items-center cborder-b p-2 bg-csecondary">
+                  <p class="font-semibold">{log.origin}</p>
+                  <p class="text-right">
+                    {format(
+                      log.created_at,
+                      { time: 'medium', date: 'long' },
+                      'es'
+                    )}
+                  </p>
+                </div>
+                <p class="mx-auto py-3 max-w-[95%] overflow-x-scroll">
+                  {log.content}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Su>

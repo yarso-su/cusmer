@@ -1,0 +1,119 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import Chat from '@/components/shared/Chat.tsx'
+import UpdateThreadForm from '@/components/su/UpdateThreadForm.tsx'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import {
+  THREAD_STATUSES,
+  THREAD_STATUSES_KEYS,
+  THREAD_TYPES
+} from '@/lib/constants'
+import Attachments from '@/components/shared/Attachments'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+type TThread = {
+  id: number
+  name: string
+  type: number
+  status: number
+  orderId?: number
+}
+let data: {
+  thread: TThread
+  attachments: Array<{
+    filename: string
+    belongsToUser: boolean
+    created_at: string
+  }>
+  messages: any[]
+  userId: string
+  token: string
+} | null
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/threads/${id}`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const content = await res.json()
+  data = content
+} catch (error) {
+  console.error(error)
+  return Astro.redirect('/error', 307)
+}
+
+if (!data) return Astro.redirect('/platform/threads', 307) // TODO: Redirect to 404
+
+const { thread, attachments, messages, userId, token } = data
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div class="">
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Hilos', href: '/su/threads' },
+          { title: id, href: '/' }
+        ]}
+      />
+      <h1
+        id="thread-name"
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        {thread.name}
+      </h1>
+      <article class="bg-csecondary cborder mt-2 w-full">
+        <div class="cborder-b last:border-b-0 grid grid-cols-[1fr_auto] p-2">
+          <p class="truncate" id="thread-type">
+            {THREAD_TYPES[thread.type]}
+          </p>
+          <div class="flex gap-2 items-center">
+            <p class="cborder-l pl-2 truncate" id="thread-status">
+              {THREAD_STATUSES[thread.status]}
+            </p>
+            <Attachments
+              id={thread.id}
+              status={thread.status}
+              list={attachments}
+              client:load
+            />
+            {
+              thread.status !== THREAD_STATUSES_KEYS.CLOSED && (
+                <div class="h-full flex items-center">
+                  <div class="cborder-l pl-2 flex items-center">
+                    <UpdateThreadForm thread={thread} client:load />
+                  </div>
+                </div>
+              )
+            }
+          </div>
+        </div>
+      </article>
+    </div>
+    <Chat
+      threadOpen={thread.status === THREAD_STATUSES_KEYS.OPEN}
+      prevMessages={messages}
+      userId={userId}
+      token={token}
+      client:load
+    />
+  </div>
+</Su>

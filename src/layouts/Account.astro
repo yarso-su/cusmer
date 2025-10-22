@@ -1,0 +1,108 @@
+---
+import Basehead from '@/components/shared/Basehead.astro'
+import ToggleThemeNonStyled from '@/components/shared/ToggleThemeNonStyled.tsx'
+import LogOut from '@lucide/astro/icons/log-out'
+import X from '@lucide/astro/icons/x'
+import PublicValidateCookies from '@/components/shared/PublicValidateCookies.astro'
+
+interface Props {
+  title: string
+  description: string
+  key: string
+  login?: boolean
+  tokenRequired?: boolean
+}
+
+const {
+  title,
+  description,
+  key,
+  login = false,
+  tokenRequired = false
+} = Astro.props as Props
+
+const metaTitle = `${title} - Works`
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    {login && <PublicValidateCookies server:defer />}
+    {
+      tokenRequired && (
+        <script is:inline>
+      (() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
+        if (!token) {
+          window.location.href = '/';
+        }
+      })();
+    </script>
+      )
+    }
+    <Basehead title={metaTitle} description={description} noindex />
+  </head>
+  <body
+    class="grid grid-rows-[1fr_auto] h-dvh"
+  >
+    <main class="mx-auto w-[90%] 2xl:w-[60%] flex h-full items-center relative">
+      <div class="w-full">
+      <div class="flex justify-between items-center mb-4">
+          <a href="/" class="text-base lg:text-lg font-ubuntu"
+            translate="no"
+            lang="en"
+          >
+          <span class="font-semibold">Works </span>
+          <span class="text-contrast">by yarso</span>
+        </a>
+          <a href="/" aria-label="Volver a la página de inicio" class='transition-colors duration-200 rounded-sm hover:bg-black/5 dark:hover:bg-white/5'>
+            <X  class='size-4 box-content p-1' />
+            <span class="sr-only">Volver a la página de inicio</span>
+        </a>
+      </div>
+        <div class="flex flex-col-reverse">
+          <h1
+            class="scroll-m-20 text-left text-2xl lg:text-4xl font-extrabold tracking-tight text-balance"
+          >
+            {title}
+          </h1>
+          <h2
+            translate="no"
+            class="leading-[1.5] text-lg lg:text-2xl font-semibold tracking-tight font-geist text-contrast"
+          >
+            {key}
+          </h2>
+        </div>
+        <p class="mt-2 text-sm md:text-lg lg:text-xl lg:max-w-[70%]">
+          {description}
+        </p>
+        <slot />
+      </div>
+      <div class="absolute bottom-0 right-0 w-full pb-4 flex justify-end">
+        <ToggleThemeNonStyled
+          className="transition-opacity duration-200 hover:opacity-100 opacity-80 text-sm lg:text-base"
+          client:idle
+        />
+      </div>
+    </main>
+    <footer class="bg-csecondary pt-2 pb-4 md:py-4 cborder-t">
+      <div class="mx-auto w-[90%] 2xl:w-[60%] mb-4">
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 underline-offset-2 group text-sm md:text-base lg:text-lg"
+        >
+          <LogOut 
+            color="var(--color-contrast)"
+            class="size-3 lg:size-4" />
+          <span
+            class="group-hover:text-black dark:group-hover:text-white transition-colors duration-200"
+          >Volver a la página de inicio</span>
+        </a>
+      </div>
+      <p class="text-center lg:text-base text-xs opacity-80">
+        © 2025 Works. Todos los derechos reservados.
+      </p>
+    </footer>
+  </body>
+</html>

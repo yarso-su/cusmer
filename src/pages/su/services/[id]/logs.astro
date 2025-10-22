@@ -1,0 +1,118 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import { validateCookies } from '@/lib/server'
+import { format } from '@formkit/tempo'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+type Log = {
+  origin: string
+  content: string
+  created_at: Date
+}
+let logs: Array<Log> = []
+
+try {
+  const res = await fetch(`${import.meta.env.API_URL}/orders/${id}/logs`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || '',
+      'Content-Type': 'application/json'
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const data = await res.json()
+  logs = data.logs
+} catch {
+  return Astro.redirect('/error', 307)
+}
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Servicios', href: '/su/services' },
+          { title: id, href: `/su/services/${id}` },
+          { title: 'Logs', href: '' }
+        ]}
+      />
+      <div class="mt-2 flex items-center gap-2">
+        <span>
+          <a
+            href={`/su/services/${id}`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Datos</a
+          ></span
+        >
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/services/${id}/payments`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Pagos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/services/${id}/threads`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Hilos</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <a
+            href={`/su/services/${id}/contract`}
+            class="opacity-60 hover:opacity-100 transition-opacity duration-200"
+            >Contrato</a
+          >
+        </span>
+        <span class="cborder-l pl-2">
+          <h1 class="font-semibold tracking-tight">Registros</h1>
+        </span>
+      </div>
+    </div>
+    <section class="bg-csecondary cborder max-h-full overflow-y-auto">
+      {
+        !logs || logs.length === 0 ? (
+          <div class="w-full h-full flex justify-center items-center">
+            <p class="text-center opacity-80 dark:opacity-60">
+              No hay registros que mostrar
+            </p>
+          </div>
+        ) : (
+          <ul>
+            {logs.map(log => (
+              <li class="cborder-b">
+                <div class="flex justify-between items-center cborder-b p-2">
+                  <p class="font-semibold">{log.origin}</p>
+                  <p class="decoration-contrast underline underline-offset-2">
+                    {format(
+                      log.created_at,
+                      { time: 'medium', date: 'long' },
+                      'es'
+                    )}
+                  </p>
+                </div>
+                <p class="cborder-l pl-2 bg-cprimary py-3">{log.content}</p>
+              </li>
+            ))}
+          </ul>
+        )
+      }
+    </section>
+  </div>
+</Su>

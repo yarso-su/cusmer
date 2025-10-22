@@ -1,0 +1,12 @@
+---
+import Account from '@/layouts/Account.astro'
+import AuthForm from '@/components/account/AuthForm.tsx'
+---
+
+<Account
+  title="Completa la autenticación 2FA"
+  key="2FA"
+  description="Verifica tu identidad para continuar con tus proyectos. Te enviaremos una contraseña de un solo uso para completar con el proceso de autenticación."
+>
+  <AuthForm client:load />
+</Account>

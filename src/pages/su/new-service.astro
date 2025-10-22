@@ -1,0 +1,88 @@
+---
+import Su from '@/layouts/Su.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import CreateOrderForm from '@/components/su/CreateOrderForm.tsx'
+import { BadResponseError } from '@/lib/errors'
+import { validateCookies } from '@/lib/server'
+
+export const prerender = false
+
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { searchParams } = Astro.url
+const userId = searchParams.get('user_id')
+let user: null | { id: string; name: string } = null
+let users: null | Array<{ id: string; name: string }> = null
+
+try {
+  if (!userId) {
+    const res = await fetch(`${import.meta.env.API_URL}/users/summary/names`, {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    })
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    const newCookies = res.headers.get('Set-Cookie')
+    if (newCookies) {
+      Astro.response.headers.set('Set-Cookie', newCookies)
+    }
+
+    const data = await res.json()
+    users = data.names
+  } else {
+    const res = await fetch(`${import.meta.env.API_URL}/users/${userId}`, {
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    })
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    const newCookies = res.headers.get('Set-Cookie')
+    if (newCookies) {
+      Astro.response.headers.set('Set-Cookie', newCookies)
+    }
+
+    const data = await res.json()
+    user = {
+      id: userId,
+      name: data.user.name
+    }
+  }
+} catch {
+  return Astro.redirect('/error', 307)
+}
+
+if (!user && !users) return Astro.redirect('/error', 307)
+
+let data
+if (user) {
+  data = { user, users: null }
+} else if (users) {
+  data = { user: null, users }
+}
+
+if (!data) return Astro.redirect('/error', 307)
+---
+
+<Su server>
+  <div class="grid grid-rows-[auto_1fr] h-full gap-2 lg:gap-4">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Su', href: '/su' },
+          { title: 'Nuevo Servicio', href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        Creando un nuevo servicio
+      </h1>
+    </div>
+    <CreateOrderForm data={data} client:load />
+  </div>
+</Su>

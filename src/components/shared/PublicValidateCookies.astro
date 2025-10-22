@@ -1,0 +1,38 @@
+---
+import { BadResponseError } from '@/lib/errors'
+import { validateCookies } from '@/lib/server'
+
+const valid = validateCookies(Astro.cookies)
+let role: string | null = null
+
+if (valid) {
+  try {
+    const res = await fetch(`${import.meta.env.API_URL}/sessions/handshake`, {
+      method: 'GET',
+      headers: {
+        Cookie: Astro.request.headers.get('cookie') || ''
+      }
+    })
+
+    if (!res.ok) throw new BadResponseError(res)
+
+    const newCookies = res.headers.get('Set-Cookie')
+    if (newCookies) {
+      Astro.response.headers.set('Set-Cookie', newCookies)
+    }
+
+    const data = await res.json()
+    role = data.role
+  } catch (error) {
+    if (error instanceof BadResponseError && error.status !== 401) {
+      console.error(error)
+    }
+  }
+}
+---
+
+<script is:inline define:vars={{ role }}>
+  if (role) {
+    window.location.href = role === 3 ? '/platform' : '/su'
+  }
+</script>

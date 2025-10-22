@@ -1,0 +1,126 @@
+---
+import Platform from '@/layouts/Platform.astro'
+import Breadcrumb from '@/components/shared/Breadcrumb.astro'
+import ThreadOptions from '@/components/platform/ThreadOptions'
+import Attachments from '@/components/shared/Attachments'
+import Chat from '@/components/shared/Chat.tsx'
+import { validateCookies } from '@/lib/server'
+import { BadResponseError } from '@/lib/errors'
+import { THREAD_STATUSES_KEYS, THREAD_TYPES } from '@/lib/constants'
+
+export const prerender = false
+if (!validateCookies(Astro.cookies))
+  return Astro.redirect('/account/login', 307)
+
+const { id = 'unkown' } = Astro.params
+
+type TThread = {
+  id: number
+  name: string
+  type: number
+  status: number
+  orderId?: number
+}
+
+let data: {
+  thread: TThread
+  attachments: Array<{
+    filename: string
+    belongsToUser: boolean
+    created_at: string
+  }>
+  messages: any[]
+  userId: string
+  token: string
+} | null = null
+
+const fetchData = async () => {
+  const res = await fetch(`${import.meta.env.API_URL}/threads/${id}`, {
+    headers: {
+      Cookie: Astro.request.headers.get('cookie') || ''
+    }
+  })
+
+  if (!res.ok) throw new BadResponseError(res)
+
+  const newCookies = res.headers.get('Set-Cookie')
+  if (newCookies) {
+    Astro.response.headers.set('Set-Cookie', newCookies)
+  }
+
+  const body = await res.json()
+  return body
+}
+
+try {
+  const res = await fetchData()
+  data = res
+} catch (error) {
+  return Astro.redirect('/error', 307)
+}
+
+if (!data) return Astro.redirect('/platform/threads', 307) // TODO: Redirect to 404
+
+const { thread, attachments, messages, userId, token } = data
+---
+
+<Platform server>
+  <div class="grid grid-rows-[auto_1fr] gap-2 h-full">
+    <div>
+      <Breadcrumb
+        items={[
+          { title: 'Plataforma', href: '/platform' },
+          { title: 'Hilos', href: '/platform/threads' },
+          { title: id, href: '/' }
+        ]}
+      />
+      <h1
+        class="scroll-m-20 text-left text-2xl lg:text-3xl font-extrabold tracking-tight text-balance"
+      >
+        {thread.name}
+      </h1>
+      <section class="bg-csecondary cborder mt-2">
+        <article
+          class="cborder-b last:border-b-0 grid grid-cols-[1fr_auto_auto_auto] p-2"
+        >
+          <p class="truncate">
+            {THREAD_TYPES[thread.type]}
+          </p>
+          <Attachments
+            id={thread.id}
+            status={thread.status}
+            list={attachments}
+            client:load
+          />
+          <div class="relative pl-2 ml-2 cborder-l flex items-center">
+            <ThreadOptions
+              id={Number(id)}
+              orderId={thread.orderId}
+              client:load
+            />
+          </div>
+        </article>
+      </section>
+    </div>
+    <Chat
+      threadOpen={thread.status === THREAD_STATUSES_KEYS.OPEN}
+      prevMessages={messages}
+      userId={userId}
+      token={token}
+      client:load
+    />
+  </div>
+</Platform>
+
+<!-- <div class="cborder-l px-2 flex items-center"> -->
+<!--   {thread.orderId !== undefined ? ( -->
+<!--     <a class="hover:underline underline-offset-2"> -->
+<!--       Servicio ({thread.orderId}) -->
+<!--     </a> -->
+<!--   ) : ( -->
+<!--     <a class="inline-flex gap-1 items-center hover:underline underline-offset-2"> -->
+<!--       <Cable class="size-4" /> -->
+<!--       <p>Vincular</p> -->
+<!--     </a> -->
+<!--   )} -->
+<!-- </div> -->
