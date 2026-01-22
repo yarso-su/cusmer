@@ -1,6 +1,9 @@
-# Customers Manager Web App - Astro and Cloudflare Pages 🚀
+# Cusmer - Astro customers manager 🚀
 
-Web application frontend for managing customers as an independent contractor. This is the client-side complement to the [backend service](https://github.com/yarso-su/customers-manager-service), forming a complete platform for customer interaction and project management.
+> [!IMPORTANT]
+> This project started as a learning exercise to explore the Elysia framework on the backend side. Even if it reached production, I wouldn't recommend using it as it is.
+
+Web application for managing customers as an independent contractor. This is the client-side complement to the [backend service](https://github.com/yarso-su/cusmer-api), forming a complete platform for customer interaction and project management.
 
 The application features a public landing page at the root with full dashboard functionality behind authentication.
 
